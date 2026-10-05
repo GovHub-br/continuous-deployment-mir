@@ -1,0 +1,84 @@
+notifications:
+  enabled: false
+
+controller:
+  replicas: 2
+  pdb:
+    enabled: true
+    minAvailable: 1
+  metrics:
+    enabled: true
+
+server:
+  replicas: 2
+  metrics:
+    enabled: true
+
+  service:
+    type: NodePort
+    nodePortHttp: 30008
+    nodePortHttps: 30009
+
+repoServer:
+  replicas: 2
+  metrics:
+    enabled: true
+  extraContainers:
+  - name: kustomized-helm
+    command:
+      - "/var/run/argocd/argocd-cmp-server"
+    # TODO: always remember to update the image tag or automatize it
+    image: quay.io/argoproj/argocd:v2.10.1
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 999
+    volumeMounts:
+      - mountPath: /var/run/argocd
+        name: var-files
+      - mountPath: /home/argocd/cmp-server/plugins
+        name: plugins
+      - mountPath: /home/argocd/cmp-server/config/plugin.yaml
+        subPath: kustomized-helm.yaml
+        name: argocd-cmp-cm
+      # Starting with v2.4, do NOT mount the same tmp volume as the repo-server container. The filesystem separation helps
+      # mitigate path traversal attacks.
+      - mountPath: /tmp
+        name: cmp-tmp
+  volumes:
+  - configMap:
+      name: argocd-cmp-cm
+    name: argocd-cmp-cm
+  - emptyDir: {}
+    name: cmp-tmp
+
+applicationSet:
+  replicas: 2
+  metrics:
+    enabled: true
+
+configs:
+  cm:
+    # Desde o Argo CD 1.8 a saúde de Applications filhos não é avaliada, então as
+    # sync-waves do app-of-apps não esperavam o Postgres/MinIO ficarem prontos antes
+    # do Airflow. Esta health check restaura esse comportamento.
+    resource.customizations.health.argoproj.io_Application: |
+      hs = {}
+      hs.status = "Progressing"
+      hs.message = ""
+      if obj.status ~= nil then
+        if obj.status.health ~= nil then
+          hs.status = obj.status.health.status
+          if obj.status.health.message ~= nil then
+            hs.message = obj.status.health.message
+          end
+        end
+      end
+      return hs
+  cmp:
+    create: true
+    # Kustomize build with helm
+    plugins:
+      kustomized-helm:
+        generate:
+          command: [sh, -c]
+          args: [ "kustomize build --enable-helm --load-restrictor LoadRestrictionsNone" ]

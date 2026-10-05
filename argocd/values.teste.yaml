@@ -1,0 +1,6 @@
+global:
+  # Ambiente de teste: sem Ingress, acesso pela NodePort do argocd-server (30008/30009)
+  domain: argocd-teste.mir.example.com
+redis-ha:
+  # O cluster de teste tem 3 nós, mas o redis em HA não é necessário para validar o ambiente
+  enabled: false

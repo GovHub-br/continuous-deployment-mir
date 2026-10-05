@@ -1,0 +1,54 @@
+minio:
+  # As imagens oficiais (quay.io/minio e docker.io/minio) deixaram de ser públicas:
+  # quay.io retorna 401 e docker.io/minio/minio não existe mais. pgsty/* é um fork
+  # comunitário que publica os mesmos binários, com o mesmo entrypoint do chart.
+  image:
+    repository: docker.io/pgsty/minio
+    tag: RELEASE.2026-08-04T00-00-00Z
+  mcImage:
+    repository: docker.io/pgsty/mc
+    tag: RELEASE.2026-09-16T00-00-00Z
+
+  replicas: 3
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 2
+
+  existingSecret: "minio-credentials"
+
+  # Bucket onde o Airflow grava os logs das tasks (remote_base_log_folder: s3://airflow-logs)
+  buckets:
+    - name: airflow-logs
+      policy: none
+      purge: false
+
+  resources:
+    requests:
+      memory: 500Mi
+      # memory: 1
+  persistence:
+    enabled: true
+    size: 10Gi
+    # size: 50
+  consoleService:
+    type: NodePort
+    nodePort: 30006
+
+  makePolicyJob:
+    securityContext:
+      enabled: true
+  makeUserJob:
+    securityContext:
+      enabled: true
+  makeServiceAccountJob:
+    securityContext:
+      enabled: true
+  makeBucketJob:
+    securityContext:
+      enabled: true
+  customCommandJob:
+    securityContext:
+      enabled: true
+  postJob:
+    securityContext:
+      enabled: true

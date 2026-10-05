@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-storage-postgres
+spec:
+  # Postgres não deve rodar sobre NFS (RWX do Longhorn); um único pod usa o volume
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

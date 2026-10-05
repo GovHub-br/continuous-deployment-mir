@@ -1,0 +1,94 @@
+# Overlay do ambiente de teste: igual ao prod, mas sem Ingress/Issuer (o cluster de
+# teste não tem cert-manager nem DNS). A interface fica na NodePort 31151.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+helmCharts:
+- name: airflow
+  repo: https://gitlab.com/api/v4/projects/55454661/packages/helm/stable
+  version: 1.12.1
+  releaseName: airflow
+  namespace: airflow
+  valuesFile: ../base/values.yaml
+  valuesInline:
+    # Os volumes dos workers (tmp, bkps, great-expectations) vêm do base/values.yaml.
+    # O volume com o certificado das APIs SIAFI/SIAPE foi removido: o MIR não consome essas APIs.
+    workers:
+      livenessProbe:
+        failureThreshold: 30
+
+    scheduler:
+      startupProbe:
+        failureThreshold: 30
+
+    webserver:
+      startupProbe:
+        failureThreshold: 30
+      service:
+        type: NodePort
+        annotations: {}
+        ports:
+          - name: airflow-ui
+            port: 8080
+            targetPort: 8080
+            nodePort: 31151
+
+    # Listas não são mescladas com o base/values.yaml: esta lista substitui a do base.
+    # As secrets de SIAFI/SIAPE foram removidas, pois o MIR não consome essas APIs.
+    secret:
+      # AIRFLOW
+      - envName: AIRFLOW__SMTP__SMTP_HOST
+        secretName: "airflow-smtp"
+        secretKey: host
+      - envName: AIRFLOW__SMTP__SMTP_STARTTLS
+        secretName: "airflow-smtp"
+        secretKey: starttls
+      # mutually exclusive with SMTP_STARTTLS
+      - envName: AIRFLOW__SMTP__SMTP_SSL
+        secretName: "airflow-smtp"
+        secretKey: ssl
+      - envName: AIRFLOW__SMTP__SMTP_USER
+        secretName: "airflow-smtp"
+        secretKey: user
+      - envName: AIRFLOW__SMTP__SMTP_PASSWORD
+        secretName: "airflow-smtp"
+        secretKey: password
+      # use port 465 if SMTP_SSL is True
+      - envName: AIRFLOW__SMTP__SMTP_PORT
+        secretName: "airflow-smtp"
+        secretKey: port
+      - envName: AIRFLOW__SMTP__SMTP_MAIL_FROM
+        secretName: "airflow-smtp"
+        secretKey: mail_from
+      - envName: AIRFLOW_CONN_AWS_DEFAULT
+        secretName: "minio-airflow-svcacct"
+        secretKey: AIRFLOW_CONN_AWS_DEFAULT
+      # MIR: conexões usadas pelas DAGs (get_postgres_conn("postgres_mir") etc.)
+      - envName: AIRFLOW_CONN_POSTGRES_DEFAULT
+        secretName: "airflow-mir-connections"
+        secretKey: AIRFLOW_CONN_POSTGRES_DEFAULT
+      - envName: AIRFLOW_CONN_POSTGRES_MIR
+        secretName: "airflow-mir-connections"
+        secretKey: AIRFLOW_CONN_POSTGRES_MIR
+
+    # Git sync
+    dags:
+      gitSync:
+        branch: main
+        rev: HEAD
+        # # The git revision (branch, tag, or hash) to check out, v4 only
+        # ref: v2-2-stable
+
+patches:
+- path: ../base/create-user-job-patch.yaml
+  target:
+    kind: Job
+    labelSelector: component=create-user-job
+
+- path: ../base/run-airflow-migrations-job-patch.yaml
+  target:
+    kind: Job
+    labelSelector: component=run-airflow-migrations
+
+resources:
+  - ../base

@@ -1,0 +1,77 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: airflow-create-user
+spec:
+  template:
+    spec:
+      containers:
+        - name: create-user
+          command:
+            - 'bash'
+            - '-c'
+            - 'airflow users create -r ${WEBSERVER_DEFAULT_USER_ROLE} -u ${WEBSERVER_DEFAULT_USER_USERNAME} -e ${WEBSERVER_DEFAULT_USER_EMAIL} -f ${WEBSERVER_DEFAULT_USER_FIRSTNAME} -l ${WEBSERVER_DEFAULT_USER_LASTNAME} -p ${WEBSERVER_DEFAULT_USER_PASSWORD}'
+          args: []
+          env:
+            - name: PYTHONPATH
+              value: "/usr/local/lib/python311.zip:/usr/local/lib/python3.11:/usr/local/lib/python3.11/lib-dynload:/home/airflow/.local/lib/python3.11/site-packages:/opt/airflow/dags-data/repo:/opt/airflow/dags-data/repo/airflow_lappis/plugins:/opt/airflow/dags-data/repo/airflow_lappis/dags:/opt/airflow/dags-data/repo/airflow_lappis/config:/home/airflow/.local/bin/airflow:/home/airflow/.local/bin:/opt/airflow/dags-data/repo/airflow_lappis/helpers"
+            - name: WEBSERVER_DEFAULT_USER_ROLE
+              valueFrom:
+                secretKeyRef:
+                  name: "airflow-webserver-admin-credentials"
+                  key: WEBSERVER_DEFAULT_USER_ROLE
+            - name: WEBSERVER_DEFAULT_USER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: "airflow-webserver-admin-credentials"
+                  key: WEBSERVER_DEFAULT_USER_USERNAME
+            - name: WEBSERVER_DEFAULT_USER_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: "airflow-webserver-admin-credentials"
+                  key: WEBSERVER_DEFAULT_USER_EMAIL
+            - name: WEBSERVER_DEFAULT_USER_FIRSTNAME
+              valueFrom:
+                secretKeyRef:
+                  name: "airflow-webserver-admin-credentials"
+                  key: WEBSERVER_DEFAULT_USER_FIRSTNAME
+            - name: WEBSERVER_DEFAULT_USER_LASTNAME
+              valueFrom:
+                secretKeyRef:
+                  name: "airflow-webserver-admin-credentials"
+                  key: WEBSERVER_DEFAULT_USER_LASTNAME
+            - name: WEBSERVER_DEFAULT_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "airflow-webserver-admin-credentials"
+                  key: WEBSERVER_DEFAULT_USER_PASSWORD
+            - name: AIRFLOW__KUBERNETES_ENVIRONMENT_VARIABLES__WEBSERVER_DEFAULT_USER_ROLE
+              valueFrom:
+                secretKeyRef:
+                  name: "airflow-webserver-admin-credentials"
+                  key: WEBSERVER_DEFAULT_USER_ROLE
+            - name: AIRFLOW__KUBERNETES_ENVIRONMENT_VARIABLES__WEBSERVER_DEFAULT_USER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: "airflow-webserver-admin-credentials"
+                  key: WEBSERVER_DEFAULT_USER_USERNAME
+            - name: AIRFLOW__KUBERNETES_ENVIRONMENT_VARIABLES__WEBSERVER_DEFAULT_USER_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: "airflow-webserver-admin-credentials"
+                  key: WEBSERVER_DEFAULT_USER_EMAIL
+            - name: AIRFLOW__KUBERNETES_ENVIRONMENT_VARIABLES__WEBSERVER_DEFAULT_USER_FIRSTNAME
+              valueFrom:
+                secretKeyRef:
+                  name: "airflow-webserver-admin-credentials"
+                  key: WEBSERVER_DEFAULT_USER_FIRSTNAME
+            - name: AIRFLOW__KUBERNETES_ENVIRONMENT_VARIABLES__WEBSERVER_DEFAULT_USER_LASTNAME
+              valueFrom:
+                secretKeyRef:
+                  name: "airflow-webserver-admin-credentials"
+                  key: WEBSERVER_DEFAULT_USER_LASTNAME
+            - name: AIRFLOW__KUBERNETES_ENVIRONMENT_VARIABLES__WEBSERVER_DEFAULT_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "airflow-webserver-admin-credentials"
+                  key: WEBSERVER_DEFAULT_USER_PASSWORD

@@ -1,0 +1,39 @@
+{{- range $app := .Values.argocdApplications -}}
+{{ if not .disable }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .name }}
+  namespace: argocd
+  annotations:
+    # hasKey em vez de default: no Go template, syncWave: 0 conta como "vazio" e caía no padrão
+    argocd.argoproj.io/sync-wave: "{{ if hasKey . "syncWave" }}{{ .syncWave }}{{ else }}{{ $.Values.global.syncWave | default "0" }}{{ end }}"
+spec:
+  project: {{ $.Values.global.spec.project }}
+  source:
+    repoURL:  {{ $.Values.global.spec.source.repoURL }}
+    targetRevision: {{ default $.Values.global.spec.source.targetRevision .targetRevision }}
+    path: {{ .path }}
+    {{- if default $.Values.global.helmDefault .helm }}
+    helm:
+      valueFiles: {{ default $.Values.global.defaultValueFiles .valueFiles }}
+    {{- else }}
+    plugin:
+      name: kustomized-helm
+    {{- end }}
+  destination:
+    namespace: {{ default $.Values.global.spec.destination.namespace  .namespace }}
+    server: {{ $.Values.global.spec.destination.server }}
+  syncPolicy:
+    {{- if not .disableAutomated }}
+    # prune e allowEmpty ficam no padrão (false). Declarados explicitamente, o Argo CD
+    # os omite ao gravar o Application e o app-of-apps fica OutOfSync para sempre.
+    automated:
+      selfHeal: true
+    {{- end }}
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+---
+{{- end }}
+{{- end }}

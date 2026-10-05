@@ -1,0 +1,13 @@
+# Ambiente de teste: sobe por partes (Postgres e MinIO primeiro).
+argocdApplications:
+  # No teste, os bancos (metadados do Airflow + Data Warehouse do MIR) ficam no cluster
+  postgres:
+    disable: false
+
+  minio:
+    path: minio/prod
+
+  # Requer os 11 Secrets do namespace airflow (ver DEPLOY.md, etapa 7)
+  airflow:
+    disable: false
+    path: airflow/teste

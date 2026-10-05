@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+patches:
+- path: create-user-job-patch.yaml
+  target:
+    kind: Job
+    labelSelector: component=create-user-job
+- path: run-airflow-migrations-job-patch.yaml
+  target:
+    kind: Job
+    labelSelector: component=run-airflow-migrations
+
+resources:
+  - airflow-tmp-pvc.yaml
+  - airflow-great-expectations-pvc.yaml
+  - airflow-dags-data-pvc.yaml
+  - airflow-bkps-pvc.yaml

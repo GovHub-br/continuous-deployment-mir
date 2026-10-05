@@ -1,0 +1,10 @@
+argocdApplications:
+  airflow:
+    path: airflow/prod
+
+  minio:
+    path: minio/prod
+
+  # banco de metadados do Airflow e Data Warehouse do MIR ficam fora do cluster
+  postgres:
+    disable: true

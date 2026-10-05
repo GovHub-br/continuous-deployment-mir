@@ -1,0 +1,14 @@
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: airflow-run-airflow-migrations
+spec:
+  template:
+    spec:
+      containers:
+      - name: run-airflow-migrations
+        env:
+        # TODO: always remember to sync with `values.yaml`
+        - name: PYTHONPATH
+          value: "/usr/local/lib/python311.zip:/usr/local/lib/python3.11:/usr/local/lib/python3.11/lib-dynload:/home/airflow/.local/lib/python3.11/site-packages:/opt/airflow/dags-data/repo:/opt/airflow/dags-data/repo/airflow_lappis/plugins:/opt/airflow/dags-data/repo/airflow_lappis/dags:/opt/airflow/dags-data/repo/airflow_lappis/config:/home/airflow/.local/bin/airflow:/home/airflow/.local/bin:/opt/airflow/dags-data/repo/airflow_lappis/helpers"

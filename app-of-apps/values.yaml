@@ -1,0 +1,43 @@
+global:
+  helmDefault: false
+  defaultValueFiles:
+    - values.yaml
+  spec:
+    project: default
+    destination:
+      server: https://kubernetes.default.svc
+      name: default
+    source:
+      repoURL: https://github.com/GovHub-br/continuous-deployment-mir.git
+      targetRevision: HEAD
+
+argocdApplications:
+  minio:
+    name: minio
+    namespace: minio
+    disableAutomated: false
+    disable: false
+    path: minio
+    targetRevision: HEAD
+    helm: true
+    syncWave: -4
+
+  postgres:
+    name: postgres
+    namespace: postgresql
+    disableAutomated: false
+    disable: false
+    path: postgres
+    targetRevision: HEAD
+    helm: false
+    syncWave: -5
+
+  airflow:
+    name: airflow
+    namespace: airflow
+    disableAutomated: false
+    disable: false
+    path: airflow
+    targetRevision: HEAD
+    helm: false
+    syncWave: 0

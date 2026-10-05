@@ -1,0 +1,29 @@
+# A Bitnami removeu as tags versionadas de docker.io/bitnami em 2025;
+# a mesma imagem continua disponível em docker.io/bitnamilegacy.
+image:
+  registry: docker.io
+  repository: bitnamilegacy/postgresql
+  tag: 16.2.0-debian-12-r8
+
+global:
+  postgresql:
+    auth:
+      username: "postgres"
+      # Senha do admin fora do Git: Secret "postgres-credentials" (chave postgres-password),
+      # criada manualmente no namespace postgresql antes do sync.
+      existingSecret: "postgres-credentials"
+primary:
+  # Cria os bancos do Airflow (metadados) e do Data Warehouse do MIR no primeiro boot.
+  # O script tem senhas, por isso fica na Secret "postgres-initdb" (criada manualmente).
+  initdb:
+    scriptsSecret: "postgres-initdb"
+  persistence:
+    enabled: true
+    existingClaim: shared-storage-postgres
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
